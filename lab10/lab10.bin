@@ -1,8 +1,39 @@
-; This is the file you will use for the lab assignment
-; Make sure to comment your code properly and don't exceed 
-; the line limitation for this assignment.  Good luck!
+; Mesa Perry
+; 11/15/18
+; take 10 2's compliment numbers from memory and add each of them in sequence
+
+; R0 - address to the start of the main loop
+; R1 - value of the current number to be added
+; R3 - address of the next number to add
+; R4 - counts down from 10 to ensure 10 numbers are added
+; R5 - holds the current sum
+
+
+
 
 0011 0001 0000 0000 ; x3100 - starting address of the program
 
-; The program description and code starts here
 
+; Initialization
+
+1110 011 000110001   ; set R3 to x3132
+0101 100 100 1 00000 ; clear R4
+0001 100 100 1 01010 ; set R4 to 10 by adding
+0101 101 101 1 00000 ; clear R5
+1110 000 000000000   ; set R0 to address of the start of the loop
+
+
+; Main loop
+
+0110 001 011 000000  ; set R1 to value of memory at address R3
+0000 110 000000001   ; skip adding process if R1 is negative or zero
+0001 101 101 0 00 001; add R5 and R1, store in R5
+0001 011 011 1 00001 ; increment R3 by 1
+0001 100 100 1 11111 ; decrement R4 by 1
+0000 100 000000001   ; skip a line if R4 is negative
+1100 000 000 000000  ; jump back to start of loop
+
+
+; Halt
+
+1111 0000 00100101   ; halt program
