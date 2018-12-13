@@ -3,6 +3,69 @@
 ; 8 bits (the high 8 bits, for your convenience) marking pixels in the
 ; line for that character.
 
+;R0 is either location of the active character
+;R1 is the line data
+;R2 counts which character in the line (counts down)
+;R3 counts which line (counts up)
+;R4 pulls the address of the line data
+;R5 initially adds up the difference for R4 to make it to the right character line data
+;R5 then is used to check when all lines have past
+;R6 indicates which letter in the string is active
+
+            .ORIG x3000
+			AND		R1, R1, #0			;clear R1
+			AND		R2, R2, #0			;clear R2
+			AND		R3, R3, #0			;clear R3
+			AND		R6, R6, #0			;clear R6
+
+
+Line		LD		R5, AsciiChar		;set R5 to the location of the first character
+			ADD		R5, R5, R6			;select the right letter
+			LDR		R5, R5, #0			;feed itself the actual ascii code for the letter
+			ADD		R5, R5, R5			;multiply R5 by 2
+			BRz		NextLine			;if null letter, go to the line
+			ADD		R5, R5, R5			;multiply R5 by 2
+			ADD		R5, R5, R5			;multiply R5 by 2
+			ADD		R5, R5, R5			;multiply R5 by 2
+			LEA		R4, FONT_DATA		;initialize R4 to the location FONT_DATA
+			ADD		R4, R4, R5			;add R4 with R5 for location of big character
+			ADD		R4, R4, R3			;go to current line
+
+
+			ADD		R2, R2, #8			;set R2 to 8
+			LDR		R1, R4, #0			;load data of address R4 into R1
+Character	ADD		R1, R1, #0			;set cc for R1
+			BRn		SetActChar			;if 1, skip to active character path
+			LDI		R0, NActiveChar		;set R0 to location of inactive character
+			BRnzp	Print				;go to print
+SetActChar	LDI		R0, ActiveChar		;set R0 to location of active character
+Print		OUT							;print the single character
+			ADD		R1, R1, R1			;left shift line data
+			ADD		R2, R2, #-1			;R2 count down one
+			BRp		Character			;go back to Character
+			ADD		R6, R6, #1			;move to next letter
+			BRnzp	Line				;back to line
+
+
+NextLine	LEA		R0, ReturnChar		;set R0 to the next line character
+			AND		R6, R6, #0			;restart on the first letter
+			PUTS						;print next line
+			ADD		R3, R3, #1			;count up to next line
+			AND		R5, R5, #0			;clear R5
+			ADD		R4, R4, #1			;count R4 up one
+			ADD		R5, R3, #-16		;check if line is 15
+			BRnp	Line				;if so, go back to Line
+			TRAP x25					;end
+
+NActiveChar	.FILL	x5000
+			.FILL	x0000
+ActiveChar	.FILL	x5001
+			.FILL	x0000
+AsciiChar	.FILL	x5002
+			.FILL	x0000
+ReturnChar	.FILL	X0A
+			.FILL	x0000
+
 FONT_DATA
 	.FILL	x0000
 	.FILL	x0000
@@ -4100,3 +4163,5 @@ FONT_DATA
 	.FILL	x0000
 	.FILL	x0000
 	.FILL	x0000
+
+			.END
